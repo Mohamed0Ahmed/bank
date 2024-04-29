@@ -1,95 +1,81 @@
-#include <iostream>
-#include <string>
-
-using namespace std;
-
 #include "client.h"
 #include "validation.h"
+#include "fileHelper.h"
+#include "clientManager.h"
+#include <iostream>
+using namespace std;
 
 Client::Client(int id, const string &name, const string &password, double balance)
     : Person(id, name, password), balance(balance) {}
+
+//* set balance
+void Client::setBalance(double balance)
+{
+  double newBalance = balance;
+  //* Check
+  if (!Validation::checkBalance(newBalance))
+  {
+    cout << "Balance Must be over 1500,\n";
+  }
+
+  //* continue asking
+  while (!Validation::checkBalance(newBalance))
+  {
+    cout << "Enter New balance : ";
+    cin >> newBalance;
+  }
+  this->balance = newBalance;
+}
 
 double Client::getBalance() const
 {
   return balance;
 }
 
-void Client::setBalance(double balance)
-{
-
-  cin >> this->balance;
-  //* Check
-  if (!Validation::checkBalance(this->balance))
-  {
-    cout << "Balance Must be over 1500,\n";
-  }
-
-  //* continue asking
-  while (!Validation::checkBalance(this->balance))
-  {
-    cout << "Enter New balance : ";
-    cin >> this->balance;
-  }
-}
-
-//* ##### Deposit
+//* deposit
 void Client::deposit(double amount)
 {
-  balance += amount;
-  cout << "Deposited $" << amount << ". New balance: $" << balance << endl;
+
+  ClientManager::deposit(*this, amount);
 }
 
-//* ##### Withdraw
+//* withdraw
 void Client::withdraw(double amount)
 {
-  if (balance >= amount && Validation::checkBalance(balance - amount))
+  cout << "=============== \n\n";
+
+  ClientManager::withdraw(*this, amount);
+}
+
+//* transfer to
+void Client::transferTo(double amount, Client &recipient)
+{
+
+  ClientManager::transferTo(*this, amount, recipient);
+}
+
+//* display my info
+void Client::displayMyInfo() const
+{
+  vector<Client> clients = FilesHelper::getClients();
+  int clientId = getId();
+  bool found = false;
+
+  for (const auto &client : clients)
   {
-    balance -= amount;
-    cout << "Withdrawn $" << amount << ". New balance: $" << balance << endl;
-  }
-  else
-  {
-    cout << "Invaild ... Your Balance Must Be Over 1500 EGP " << endl;
+    if (client.getId() == clientId)
+    {
+      found = true;
+      cout << "=============== \n\n";
+      cout << "Client Details : \n\n";
+      cout << "Client ID : " << client.getId() << ",    Name : " << client.getName() << ",    Balance : " << client.getBalance() << ",    Password : " << client.getPassword() << endl;
+      break; 
+    }
   }
 }
 
-//* #### transfer to
-void Client::transferTo(Client &recipient, double amount)
+//* update password
+void Client::updatePassword()
 {
-  if (balance >= amount && Validation::checkBalance(balance - amount))
-  {
-    balance -= amount;
-    recipient.balance += amount;
-    cout << "Transferred EGP " << amount << " to " << recipient.getName() << endl;
-  }
-  else
-  {
-    cout << "Invaild Transfer.. Your Balance Must Be Over 1500 EGP" << endl;
-  }
-}
-
-//* ### check Balance
-void Client::checkBalance()
-{
-  cout << "Current balance: EGP " << balance << endl;
-}
-
-//* display client information
-void Client::DisplayClientInfo() const
-{
-  cout << "Client ID: " << getId() << endl;
-  cout << "Name: " << getName() << endl;
-  cout << "Balance: EGP " << getBalance() << endl;
-  cout << "Password: " << getPassword() << endl;
-}
-
-//* login
-bool Client::login(int id, const string &password)
-{
-  if (getId() == id && getPassword() == password)
-  {
-    return true;
-  }
-  else
-    return false;
-}
+  ClientManager::updatePassword(this);
+};

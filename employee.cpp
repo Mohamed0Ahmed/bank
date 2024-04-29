@@ -1,17 +1,13 @@
-#include <iostream>
-#include <string>
-#include <limits>
-
-using namespace std;
-
 #include "employee.h"
-#include "client.h"
 #include "validation.h"
+#include "fileHelper.h"
+#include "fileManager.h"
+#include <iostream>
+using namespace std;
 
 Employee::Employee(int id, const string &name, const string &password, double salary)
     : Person(id, name, password), salary(salary) {}
 
-//*#### setter and geeter for salary true
 double Employee::getSalary() const
 {
   return salary;
@@ -19,162 +15,165 @@ double Employee::getSalary() const
 
 void Employee::setSalary(double salary)
 {
-
-  cin >> this->salary;
+  double newSalary = salary;
   //* Check
-  if (!Validation::checkSalary(this->salary))
+  if (!Validation::checkSalary(newSalary))
   {
     cout << "Salary must be over 5000 EGP ,\n";
   }
 
   //* continue asking
-  while (!Validation::checkSalary(this->salary))
+  while (!Validation::checkSalary(newSalary))
   {
     cout << "Enter New Salary : ";
-    cin >> this->salary;
+  }
+  this->salary = newSalary;
+}
+
+//* display information##############
+void Employee::displayEmployeeDetails() const
+{
+
+  vector<Employee> employees = FilesHelper::getEmployees();
+  int empId = getId();
+  bool found = false;
+
+  for (const auto &employee : employees)
+  {
+    if (employee.getId() == empId)
+    {
+      found = true;
+      cout << "=============== \n\n";
+      cout << "Employee Details : \n\n";
+      cout << "Employee ID : " << employee.getId() << ",    Name : " << employee.getName() << ",    Salary : " << employee.getSalary() << ",    Password : " << employee.getPassword() << endl;
+      break;
+    }
   }
 }
 
-//* Display employee information true
-void Employee::DisplayEmployeeDetails()
-{
-
-  cout << "Employee ID: " << getId() << endl;
-  cout << "Name: " << getName() << endl;
-  cout << "Salary: EGP " << getSalary() << endl;
-  cout << "Password: " << getPassword() << endl;
-}
-
-//* ### login for employee
-bool Employee::login(int id, const string &password)
+//* login
+void Employee::login(int id, const string &password)
 {
   if (getId() == id && getPassword() == password)
   {
-    return true;
+    cout << "Login successful. Welcome, " << getName() << "!" << endl;
   }
   else
-    return false;
-}
-
-//* ##  add client true
-void Employee::addClient(vector<Client> &allClients)
-{
-
-  double balance;
-  cout << "==========  Adding client ==========\n\n";
-
-  //* Ask for client ID
-  do
   {
-    cout << "Enter client ID: ";
-    cin >> id;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    //* Check if the client ID already exists
-    bool idExists = false;
-    for (const auto &client : clients)
-    {
-      if (client.getId() == id)
-      {
-        idExists = true;
-        cout << "Client with ID " << id << " already exists. Please enter another ID." << endl;
-        break;
-      }
-    }
-    if (!idExists)
-      break; //* Exit
-  } while (true);
-
-  cout << "Enter client name: ";
-  setName(name);
-  cout << "Enter client password: ";
-  setPassword(password);
-  do
-  {
-    cout << "Enter new balance: ";
-    cin >> balance;
-
-    if (!Validation::checkBalance(balance))
-    {
-      cout << "Balance must be over 1500." << endl;
-    }
-  } while (!Validation::checkBalance(balance));
-
-  clients.emplace_back(id, name, password, balance);
-  allClients.push_back(clients.back());
-
-  cout << "\nClient added.\n\n";
-}
-
-//* ##  search client true
-Client *Employee::searchClient(const vector<Client> &clients)
-{
-
-  cout << "Enter Client ID To Search : ";
-  cin >> id;
-  cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-  for (auto &client : clients)
-  {
-    if (client.getId() == id)
-    {
-      cout << "Client found :\n\n";
-      client.DisplayClientInfo();
-      return nullptr;
-    }
-  }
-  cout << "\n\nClient with ID " << id << " not found.\n\n";
-  return nullptr;
-}
-//* display all clients
-void Employee::displayAllClients(const vector<Client> &clients) const
-{
-  int counter = 1;
-  if (clients.empty())
-  {
-    cout << "No clients yet." << endl;
-    return;
-  }
-
-  cout << "\nAll Clients: \n\n";
-
-  for (auto &client : clients)
-  {
-    cout << "Client number : " << counter++ << "\n\n";
-    client.DisplayClientInfo();
-    cout << "\n\n";
+    cout << "Login failed. Invalid ID or password." << endl;
   }
 }
 
-//*  edit client
-Client *Employee::editClientInfo(vector<Client> &clients)
+//* add client
+void Employee::addClient(const Client &newClient)
 {
-  int clientId;
-  cout << "Enter ID of client to edit info: ";
-  cin >> clientId;
-  cin.ignore(numeric_limits<streamsize>::max(), '\n');
+  FileManager fileManager;
 
-  //* Find the client
+  fileManager.addClient(newClient);
+}
+//* search client
+Client *Employee::searchClientById(int clientId)
+{
+  FilesHelper fileHelper;
+  vector<Client> clients = fileHelper.getClients();
   for (auto &client : clients)
   {
     if (client.getId() == clientId)
     {
-      cout << "Client found. Editing information for client with ID " << clientId << endl;
-      //* Allow the user to edit client information
-      cout << "Enter new name: ";
-      cin.ignore();
-      client.setName(name);
-
-      cout << "Enter new password: ";
-      client.setPassword(password);
-      cout << "Enter new Balance: ";
-      client.setBalance(balance);
-
-      cout << "\n\nClient information updated successfully.\n"
-           << endl;
+      cout << "\nClient is found.\n";
       return &client;
     }
   }
-  cout << "\nClient with ID " << clientId << " not found.\n\n";
+  cout << "==========\n\n";
+  cout << "Client not found." << endl;
   return nullptr;
+}
+
+//*display all clients
+void Employee::displayAllClients() const
+{
+  cout << "\n ========== \n\n";
+
+  FilesHelper fileHelper;
+  vector<Client> clients = fileHelper.getClients();
+
+  cout << "List of Clients: \n\n";
+  for (const auto &client : clients)
+  {
+    cout << "ID: " << client.getId() << "     Name: " << client.getName() << "    Balance: " << client.getBalance() << "    Password: " << client.getPassword() << "\n";
+  }
+}
+
+//* edit client info
+void Employee::editClientInfo(Client &client)
+{
+  clients = FilesHelper::getClients();
+  while (true)
+  {
+    cout << "\n\n ========== \n\n";
+
+    cout << "Editing client information:" << endl;
+    cout << "1. Edit Name" << endl;
+    cout << "2. Edit Password" << endl;
+    cout << "3. Edit Balance" << endl;
+    cout << "4. Done Editing" << endl;
+    cout << "Enter your choice: ";
+    int choice;
+    cin >> choice;
+
+    switch (choice)
+    {
+    case 1:
+    {
+      string newName;
+      cout << "Enter new name: ";
+      cin.ignore();
+      getline(cin, newName);
+      client.setName(newName);
+      break;
+    }
+    case 2:
+    {
+      string newPassword;
+      cout << "Enter new password: ";
+      cin.ignore();
+      getline(cin, newPassword);
+      client.setPassword(newPassword);
+      break;
+    }
+    case 3:
+    {
+      double newBalance;
+      cout << "Enter new balance: ";
+      cin >> newBalance;
+      client.setBalance(newBalance);
+      break;
+    }
+    case 4:
+    {
+      return;
+    }
+    default:
+      cout << "Invalid choice. Please try again." << endl;
+    }
+
+    //* Ask if the user wants to continue editing
+    cout << "Do you want to edit anything else? (y/n): ";
+    char continueChoice;
+    cin >> continueChoice;
+    if (continueChoice != 'y' && continueChoice != 'Y')
+    {
+      break;
+    }
+  }
+  for (auto &c : clients)
+  {
+    if (c.getId() == client.getId())
+    {
+      c = client;
+      break;
+    }
+  }
+  FilesHelper::updateClientFile(clients);
+  cout << "Client information updated successfully." << endl;
 }

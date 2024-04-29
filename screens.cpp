@@ -1,60 +1,144 @@
+#include "Screens.h"
 #include <iostream>
 using namespace std;
 
-#include "screens.h"
-#include <string>
+#include "clientManager.h"
+#include "employeeManager.h"
+#include "adminManager.h"
+#include "fileHelper.h"
+#include "fileManager.h"
 
-//* methods
-void Screen::WelcomePage()
+void Screens::bankName()
 {
-  cout << "======================================================= \n";
-  cout << "\n                  Welcome to Our Bank!\n\n";
-  cout << "======================================================= \n\n";
-};
-void Screen::mainMenu()
-{
-  cout << "1. If you are Client write    'c' " << endl;
-  cout << "2. If you are Admin write     'a' " << endl;
-  cout << "3. If you are Employee write  'e' " << endl;
-  cout << "4. To close write             'x' " << endl;
-  cout << "\n=========== \n";
-};
-void Screen::adminMenu()
-{
-  cout << "================================================= \n";
-  cout << "1. Add an Employee" << endl;
-  cout << "2. Search for Employee" << endl;
-  cout << "3. Edit Employee info " << endl;
-  cout << "4. Show all Employees " << endl;
-  cout << "5. Show all clients " << endl;
-  cout << "6. Add a client " << endl;
-  cout << "7. Return to menu" << endl;
-  cout << "Enter your choice: ";
-  cout << "\n==============================================\n";
-};
+  cout << "           Egypt Bank\n\n";
+}
 
-void Screen::employeeMenu()
+void Screens::welcome()
 {
-  cout << "================================================= \n";
-  cout << "1. Add a Client" << endl;
-  cout << "2. Search for Client" << endl;
-  cout << "3. Edit Client info " << endl;
-  cout << "4. Display My Deatils " << endl;
-  cout << "5. Show all clients " << endl;
-  cout << "6. Return to menu" << endl;
-  cout << "Enter your choice: ";
-  cout << "\n==============================================\n";
-};
-void Screen::clientMenu()
+  cout << "Welcome to Egypt Bank. Please login to continue." << endl;
+}
+
+void Screens::loginOptions()
 {
-  cout << "\n\n";
-  cout << "================================================= \n";
-  cout << "1. Check Your Balance" << endl;
-  cout << "2. Deposit " << endl;
-  cout << "3. Withdraw " << endl;
-  cout << "4. Transfer To Another Client " << endl;
-  cout << "5. Display My Account" << endl;
-  cout << "6. Return to menu" << endl;
+  cout << "Login Options:" << endl;
+  cout << "1. Login as Client" << endl;
+  cout << "2. Login as Employee" << endl;
+  cout << "3. Login as Admin" << endl;
+  cout << "4. Exit" << endl;
+}
+
+int Screens::loginAs()
+{
+  int choice;
   cout << "Enter your choice: ";
-  cout << "\n==============================================\n";
-};
+  cin >> choice;
+  return choice;
+}
+
+void Screens::invalid(int c)
+{
+  cout << "Invalid choice: " << c << endl;
+}
+
+void Screens::logout()
+{
+  cout << "======\n\n";
+  cout << "Logged out successfully.\n\n";
+}
+
+void Screens::loginScreen(int c)
+{
+  switch (c)
+  {
+  case 1:
+  {
+    int id;
+    string password;
+    cout << "\nEnter id to login : \n";
+    cin >> id;
+    cout << "\nEnter Password : \n";
+    cin >> password;
+    Client *cl = ClientManager::login(id, password);
+    if (cl)
+    {
+      ClientManager::clientOptions(cl);
+      logout();
+    }
+
+    break;
+  }
+
+  case 2:
+  {
+    int id;
+    string password;
+    cout << "\nEnter id to login : \n";
+    cin >> id;
+    cout << "\nEnter Password : \n";
+    cin >> password;
+    Employee *emp = EmployeeManager::login(id, password);
+    if (emp)
+    {
+      EmployeeManager::employeeOptions(emp);
+      logout();
+    }
+
+    break;
+  }
+  break;
+  case 3:
+
+  {
+    int id;
+    string password;
+    cout << "\nEnter id to login : \n";
+    cin >> id;
+    cout << "\nEnter Password : \n";
+    cin >> password;
+    Admin *ad = AdminManager::login(id, password);
+    if (ad)
+    {
+      AdminManager::adminOptions(ad);
+      logout();
+    }
+
+    break;
+  }
+
+  break;
+  default:
+    invalid(c);
+    break;
+  }
+}
+
+void Screens::runApp()
+{
+  if (FilesHelper::getAdmins().empty())
+  {
+    Admin *defaultAdmin = Admin::getInstance();
+    FileManager file ;
+    file.addAdmin(*defaultAdmin);
+  }
+
+  bankName();
+  welcome();
+  while (true)
+  {
+    loginOptions();
+    int choice = loginAs();
+    if (choice == 4)
+    {
+      cout << "\n\nGoodBye ....";
+      break;
+    }
+    else if (choice >= 1 && choice <= 3)
+    {
+      loginScreen(choice);
+    }
+    else
+    {
+      invalid(choice);
+    }
+  }
+}

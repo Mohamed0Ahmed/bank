@@ -1,11 +1,11 @@
+
 #pragma once
 #include <string>
+using namespace std;
+#include <vector>
 
 #include "person.h"
 #include "client.h"
-#include <vector>
-
-using namespace std;
 
 class Employee : public Person
 {
@@ -18,10 +18,10 @@ public:
 
   double getSalary() const;
   void setSalary(double salary);
-  void DisplayEmployeeDetails();
-  bool login(int id, const string &password);
-  void addClient(vector<Client> &allClients);
-  Client *searchClient(const vector<Client> &clients);
-  void displayAllClients(const vector<Client> &clients) const;
-  Client *editClientInfo( vector<Client> &clients);
+  void displayEmployeeDetails() const;
+  void login(int id, const string &password);
+  void addClient(const Client &newClient);
+  Client *searchClientById(int clientId);
+  void displayAllClients() const;
+  void editClientInfo(Client &client);
 };

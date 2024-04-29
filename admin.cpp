@@ -1,132 +1,157 @@
-#include <iostream>
-#include <limits>
-
-using namespace std;
-
 #include "admin.h"
-#include "validation.h"
-#include "employee.h"
+#include "fileHelper.h"
+#include "fileManager.h"
+#include <iostream>
 
-Admin::Admin(int id, const string &name, const string &password, double salary, vector<Employee> &allEmployees)
-    : Employee(id, name, password, salary), employees(allEmployees) {}
+#include <limits>
+#include <cstdlib>
 
+Admin *Admin::instance = nullptr;
 
-//* add emp
-void Admin::addEmployee(vector<Employee> &allEmployees)
+Admin::Admin(int id, const string &name, const string &password, double salary)
+    : Employee(id, name, password, salary) {}
+
+Admin *Admin::getInstance()
+{
+  if (!instance)
+  {
+    //* default instance for admin
+    instance = new Admin(1, "Admin", "admin123", 15000);
+  }
+  return instance;
+}
+
+void Admin::destroyInstance()
+{
+  if (instance)
+  {
+    delete instance;
+    instance = nullptr;
+  }
+}
+
+//* show admin information
+void Admin::displayAdminDetails() const
 {
 
-  double salary;
+  cout << "========\n\n";
+  cout << "ID: " << getId() << endl;
+  cout << "Name: " << getName() << endl;
+  cout << "Password: " << getPassword() << endl;
+  cout << "Salary: " << getSalary() << endl;
+  cout << "========\n\n";
+}
 
-  cout << "========== Adding employee ==========\n\n";
+//* add employee
+void Admin::addEmployee(const Employee &newEmployee)
+{
+  FileManager fileManager;
+  fileManager.addEmployee(newEmployee);
+}
 
-  //* Ask for employee ID
-  do
+//* search for employee
+Employee *Admin::searchEmployeeById(int employeeId)
+{
+
+  FilesHelper fileHelper;
+  vector<Employee> employees = fileHelper.getEmployees();
+  for (auto &employee : employees)
   {
-    cout << "Enter employee ID: ";
-    cin >> id;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    //* Check if the employee ID already exists
-    bool idExists = false;
-    for (const auto &employee : allEmployees)
+    if (employee.getId() == employeeId)
     {
-      if (employee.getId() == id)
+      cout << "==========\n\n";
+      cout << "Employee is found.\n\n";
+      return &employee;
+    }
+  }
+  cout << "==========\n\n";
+  cout << "Employee not found." << endl;
+  return nullptr;
+}
+
+//* edit employee information
+
+void Admin::editEmployeeInfo(Employee &employee)
+{
+  employees = FilesHelper::getEmployees();
+
+  while (true)
+  {
+    cout << "Editing employee information:" << endl;
+    cout << "1. Edit Name" << endl;
+    cout << "2. Edit Password" << endl;
+    cout << "3. Edit Salary" << endl;
+    cout << "4. Done Editing" << endl;
+    cout << "Enter your choice: ";
+
+    string choiceStr;
+    cin >> choiceStr;
+
+    try
+    {
+      int choice = stoi(choiceStr);
+      switch (choice)
       {
-        idExists = true;
-        cout << "Employee with ID " << id << " already exists. Please enter another ID." << endl;
+      case 1:
+      {
+        string newName;
+        cout << "Enter new name: ";
+        cin.ignore();
+        getline(cin, newName);
+        employee.setName(newName);
         break;
       }
+      case 2:
+      {
+        string newPassword;
+        cout << "Enter new password: ";
+        cin.ignore();
+        getline(cin, newPassword);
+        employee.setPassword(newPassword);
+        break;
+      }
+      case 3:
+      {
+        double newSalary;
+        cout << "Enter new salary: ";
+        cin >> newSalary;
+        employee.setSalary(newSalary);
+        break;
+      }
+      case 4:
+        for (auto &e : employees)
+        {
+          if (e.getId() == employee.getId())
+          {
+            e = employee;
+            break;
+          }
+        }
+        FilesHelper::updateEmployeeFile(employees);
+        cout << "Employee information updated successfully." << endl;
+        return;
+      default:
+        cout << "\nInvalid choice. Please try again.\n\n";
+      }
     }
-    if (!idExists)
-      break; //* Exit
-  } while (true);
-
-  cout << "Enter employee name: ";
-  cin.ignore(); //* Ignore the newline character left in the input buffer
-  setName(name);
-
-  cout << "Enter employee password: ";
-  setPassword(password);
-
-  //* Ask for salary until a valid one is provided
-  do
-  {
-    cout << "Enter new salary: ";
-    cin >> salary;
-
-    if (!Validation::checkSalary(salary))
+    catch (const invalid_argument &)
     {
-      cout << "Salary must be over 5000." << endl;
-    }
-  } while (!Validation::checkSalary(salary));
-
-  //* Create a new employee object and add it to the admin's list of employees
-  employees.emplace_back(id, name, password, salary);
-
-  cout << "\nEmployee added.\n\n";
-}
-
-//* search for emp 
-Employee *Admin::searchEmployee(int employeeId, vector<Employee> &employees)
-{
-  for (auto &employee : employees)
-  {
-    if (employee.getId() == employeeId)
-    {
-      cout << "\nEmployee found:\n" << endl;
-      employee.DisplayEmployeeDetails();
-      return &employee;
+      cout << "Invalid choice. Please try again." << endl;
+      cin.clear();
+      cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
   }
-  cout << "\nEmployee with ID " << employeeId << " not found." << endl;
-  return nullptr;
 }
 
-//* Edit Employee
-Employee *Admin::editEmployeeInfo(int employeeId ,vector<Employee> &employees)
+//* Display All Employees
+void Admin::displayAllEmployees() const
 {
+  cout << "\n ========== \n";
+  vector<Employee> employees = FilesHelper::getEmployees();
 
-  for (auto &employee : employees)
+  cout << "List of Employees: \n\n";
+  for (const auto &employee : employees)
   {
-    if (employee.getId() == employeeId)
-    {
-      cout << "\nEmployee found:" << endl;
-
-      cout << "Editing employee information.\n" << endl;
-
-      cout << "Enter new name: ";
-      string newName;
-      cin.ignore();
-      employee.setName(newName);
-
-      cout << "Enter new password: ";
-      string newPassword;
-      employee.setPassword(newPassword);
-
-      double newSalary;
-      cout << "Enter new salary: ";
-
-      employee.setSalary(newSalary);
-
-      cout << "\nEmployee information updated successfully.\n" << endl;
-
-      return &employee;
-    }
-  }
-  cout << "\nEmployee with ID " << employeeId << " not found.\n" << endl;
-  return nullptr;
-}
-
-//* display all employees
-void Admin::displayAllEmployees(const vector<Employee> &employees)
-{
-  int counter = 1;
-  cout << "All Employees:\n\n";
-  for (auto &employee : employees)
-  {
-    Employee tempEmployee = employee;
-    cout << "Employee number : " << counter++ << "\n\n";
-    tempEmployee.DisplayEmployeeDetails(); //* Display the details
-    cout << endl;
+    cout << "ID: " << employee.getId() << "     Name: " << employee.getName() << "    Salary: " << employee.getSalary() << "    Password: " << employee.getPassword() << "\n";
   }
 }

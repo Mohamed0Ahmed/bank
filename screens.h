@@ -1,32 +1,16 @@
-
 #pragma once
-#include <iostream>
-#include <vector>
-
+#include <string>
 using namespace std;
 
-#include "admin.h"
-#include "client.h"
-
-class Screen
+class Screens
 {
 public:
-  // //* varialbes
-  int choice;
-  string password;
-  string name;
-  int id;
-  double salary;
-  double balance;
-
-  vector<Client> clients;
-  vector<Employee> employees;
-  vector<Admin> admins;
-
-  //* methods
-  void WelcomePage();
-  void mainMenu();
-  void adminMenu();
-  void clientMenu();
-  void employeeMenu();
+  static void bankName();
+  static void welcome();
+  static void loginOptions();
+  static int loginAs();
+  static void invalid(int c);
+  static void logout();
+  static void loginScreen(int c);
+  static void runApp();
 };

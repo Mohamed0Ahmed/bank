@@ -1,25 +1,29 @@
 #pragma once
+#include <string>
+#include <vector>
 using namespace std;
 
-//* includes
 #include "person.h"
 
 class Client : public Person
 {
 private:
   double balance;
-  int id;
-  string name;
+  vector<Client> clients;
 
 public:
   Client(int id, const string &name, const string &password, double balance);
-  double getBalance() const;
+
+  //* Setters
   void setBalance(double balance);
+
+  //* Getters
+  double getBalance() const;
+
+  //* Deposit, Withdraw, Transfer, and Display methods
   void deposit(double amount);
   void withdraw(double amount);
-  void transferTo(Client &recipient, double amount);
-  void checkBalance();
-  void DisplayClientInfo() const;
-
-  bool login(int id, const string &password);
+  void transferTo(double amount, Client &recipient);
+  void displayMyInfo() const;
+  void updatePassword();
 };
